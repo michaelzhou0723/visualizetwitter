@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link href='https://fonts.googleapis.com/css?family=Maven+Pro:500' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css">
+    <link rel="stylesheet" href="css/scrolling-nav.css">
+	<link rel="stylesheet" href="css/plot.css">
+    <title>Twitter Visualizer</title>
+</head>
+
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+	<script src="js/d3.min.js" charset="utf-8"></script>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header page-scroll">
+                <a class="navbar-brand page-scroll" href="#page-top">Twitter Visualizer</a>
+            </div>
+        </div>
+    </nav>
+	
+	<section id="trend" class="trend-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Weekly Trend</h1>
+                    <div id="line-chart"></div>
+					<script>
+						var margin = {top: 30, right: 90, bottom: 60, left: 90},
+							width = 900 - margin.left - margin.right,
+							height = 500 - margin.top - margin.bottom;
+						var parseDate = d3.time.format("%Y-%m-%d").parse;
+						var x = d3.time.scale().range([0, width]);
+						var y = d3.scale.linear().range([height, 0]);
+						var xAxis = d3.svg.axis().scale(x)
+							.orient("bottom").ticks(8);
+						var yAxis = d3.svg.axis().scale(y)
+							.orient("left").ticks(6);
+						var valueline = d3.svg.line()
+							.x(function(d) { return x(d[0]); })
+							.y(function(d) { return y(d[1]); });
+						var svg = d3.select("div#line-chart")
+							.append("svg")
+								.attr("width", width + margin.left + margin.right)
+								.attr("height", height + margin.top + margin.bottom)
+							.append("g")
+								.attr("transform", 
+									"translate(" + margin.left + "," + margin.top + ")");
+						
+						d3.json("trend.json", function(error,data) {
+							data.forEach(function(d) {
+								d[0] = parseDate(d[0]);
+								d[1] = +d[1];
+							});
+							x.domain(d3.extent(data, function(d) { return d[0]; }));
+							y.domain([0, d3.max(data, function(d) { return d[1]; })]);
+							svg.append("path")
+								.attr("class", "line")
+								.attr("d", valueline(data));
+							svg.append("g")
+								.attr("class", "x axis")
+								.attr("transform", "translate(0," + height + ")")
+								.call(xAxis);
+							svg.append("text")
+								.attr("x", width / 2 )
+								.attr("y", height + margin.bottom )
+								.style("text-anchor", "middle")
+								.style("font-size", 20)
+								.text("Date");
+							svg.append("g")
+								.attr("class", "y axis")
+								.call(yAxis);
+							svg.append("text")
+								.attr("transform", "rotate(-90)")
+								.attr("y", 0 - margin.left)
+								.attr("x",0 - (height / 2))
+								.attr("dy", "1em")
+								.style("text-anchor", "middle")
+								.style("font-size", 20)
+								.text("Tweets");
+							function make_x_axis() {		
+								return d3.svg.axis()
+									.scale(x)
+									.orient("bottom")
+									.ticks(8)
+							}
+							function make_y_axis() {		
+								return d3.svg.axis()
+									.scale(y)
+									.orient("left")
+									.ticks(6)
+							}
+							svg.append("g")			
+								.attr("class", "grid")
+								.attr("transform", "translate(0," + height + ")")
+								.call(make_x_axis()
+									.tickSize(-height, 0, 0)
+									.tickFormat("")
+								)
+							svg.append("g")			
+								.attr("class", "grid")
+								.call(make_y_axis()
+									.tickSize(-width, 0, 0)
+									.tickFormat("")
+								)
+						});
+						</script>
+                    <a class="btn btn-default btn-lg page-scroll single" href="#word">NEXT</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="word" class="word-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Popular Terms</h1>
+					<div id="word-cloud"></div>
+					<script src="js/cloud.js"></script>
+					<script>
+						var width2 = 900, height2 = 500;
+						var fill = d3.scale.category20();
+						var wordG = d3.select("div#word-cloud")
+							.append("svg")
+								.attr("width", width2)
+								.attr("height", height2)
+							.append("g")
+								.attr("id", "wordCloudG")
+								.attr("transform", 
+									"translate(" + width2/2 + "," + height2/2 + ")");
+						d3.json("freq.json", function(error,data) {
+							values = [];
+							data.forEach(function(d) {
+								d[1] = +d[1];
+								values.push(d[1]);
+							});
+							
+							domainMin = Math.min.apply(null,values);
+							domainMax = Math.max.apply(null,values);
+							wordScale=d3.scale.linear().domain([domainMin,domainMax]).range([20,65]);
+							d3.layout.cloud()
+								.size([width2,height2])
+								.words(data)
+								.padding(3)
+								.rotate(function(d) { 
+									return 0;
+								})
+								.font("Impact")
+								.fontSize(function(d) { return wordScale(d[1]); })
+								.on("end", draw)
+								.start();
+							function draw(words) {
+								wordG.selectAll("text")
+									.data(words)
+									.enter()
+									.append("text")
+									.style("font-size", function(d) { return wordScale(d[1]); })
+									.style("font-family", "Impact")
+									.style("fill", function(d, i) { return fill(i); })
+									.attr("text-anchor", "middle")
+									.attr("transform", function(d) {
+										return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+									})
+									.text(function(d) { return d[0]; });
+							}
+						});
+					</script>
+					<a class="btn btn-default btn-lg page-scroll double" href="#geolocation">NEXT</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="geolocation" class="geolocation-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Geolocation</h1>
+					<div id="map"></div>
+					<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+					<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+					<script>
+						var map = L.map('map').setView([50.5, 5.0], 5);
+						var mytiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    						attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+						}).addTo(map);
+						$.getJSON("./geo.json", function(data) {
+							L.geoJson(data).addTo(map);
+						});
+					</script>
+					<a class="btn btn-default btn-lg page-scroll single" href="#retweets">NEXT</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="retweets" class="retweets-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>Most Retweeted Tweets</h1>
+					<div id="directed-force"></div>
+					<script>
+						d3.json("retweets.json", function(error, links) {
+							var color = d3.scale.category20();
+							var nodes = {};
+							links.forEach(function(link) {
+								link.source = nodes[link.source] || 
+									(nodes[link.source] = {id: link.source, group: link.group});
+								link.target = nodes[link.target] || 
+									(nodes[link.target] = {id: link.target, group: link.group});
+							});
+							var width = 960,height = 700;
+							var force = d3.layout.force()
+								.nodes(d3.values(nodes))
+								.links(links)
+								.size([width, height])
+								.linkDistance(50)
+								.charge(-10)
+								.start();
+							var svg = d3.select("div#directed-force").append("svg")
+								.attr("width", width)
+								.attr("height", height);
+							var link = svg.selectAll(".link")
+								.data(force.links())
+								.enter().append("line")
+								.attr("class", "link")
+							var node = svg.selectAll(".node")
+								.data(force.nodes())
+								.enter().append("circle")
+								.attr("class", "node")
+								.attr("r", 5)
+								.style("fill", function(d) { return color(d.group); })
+								.on('click', function(d, i) {
+  									window.location.href = "https://twitter.com/statuses/" + d.id;
+								})
+								.call(force.drag);
+							force.on("tick",function() {
+								link.attr("x1", function(d) { return d.source.x; })
+									.attr("y1", function(d) { return d.source.y; })
+									.attr("x2", function(d) { return d.target.x; })
+									.attr("y2", function(d) { return d.target.y; });
+								node.attr("cx", function(d) { return d.x; })
+									.attr("cy", function(d) { return d.y; });
+							});
+						});
+					</script>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.easing.min.js"></script>
+    <script src="js/scrolling-nav.js"></script>
+	<script>
+	$(".btn").mouseup(function(){
+    	$(this).blur();
+	})
+	</script>
+</body>
+</html>
