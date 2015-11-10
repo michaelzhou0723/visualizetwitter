@@ -11,7 +11,7 @@ def count_date(tweets):
 	c.update(dates)
 	data = [item for item in c.items()]
 	data.sort()
-	with open('trend.json','w') as f:
+	with open('json/trend.json','w') as f:
 		json.dump(data,f)
 		
 def analyze_term(tweets):
@@ -22,7 +22,7 @@ def analyze_term(tweets):
 		tokenized = tokenizer.tokenize(tweet['text'])
 		processed = [t.lower() for t in tokenized if t.lower() not in stop]
 		c.update(processed)
-	with open('freq.json','w') as f:
+	with open('json/freq.json','w') as f:
 		transformed = []
 		for value in c.most_common(50):
 			transformed.append([value[0],int(math.sqrt(value[1]))])
@@ -39,7 +39,7 @@ def to_geojson(tweets):
             "geometry": tweet['coordinates'],
         }
 		geo_data['features'].append(feature)
-	with open('geo.json','w') as f:
+	with open('json/geo.json','w') as f:
 		json.dump(geo_data,f)
 		
 def construct_retweets_graph(tweets):
@@ -58,6 +58,6 @@ def construct_retweets_graph(tweets):
 		if str(t[1]) in most_retweeted and cnt < 500:
 			graph.append({'source': str(t[0]), 'target': str(t[1]), 'group': most_retweeted.index(str(t[1]))})
 			cnt += 1
-	with open('retweets.json','w') as f:
+	with open('json/retweets.json','w') as f:
 		json.dump(graph,f)	
 	

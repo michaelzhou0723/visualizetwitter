@@ -49,7 +49,7 @@
 								.attr("transform", 
 									"translate(" + margin.left + "," + margin.top + ")");
 						
-						d3.json("trend.json", function(error,data) {
+						d3.json("./json/trend.json", function(error,data) {
 							data.forEach(function(d) {
 								d[0] = parseDate(d[0]);
 								d[1] = +d[1];
@@ -131,7 +131,7 @@
 								.attr("id", "wordCloudG")
 								.attr("transform", 
 									"translate(" + width2/2 + "," + height2/2 + ")");
-						d3.json("freq.json", function(error,data) {
+						d3.json("./json/freq.json", function(error,data) {
 							values = [];
 							data.forEach(function(d) {
 								d[1] = +d[1];
@@ -187,7 +187,7 @@
 						var mytiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     						attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
 						}).addTo(map);
-						$.getJSON("./geo.json", function(data) {
+						$.getJSON("./json/geo.json", function(data) {
 							L.geoJson(data).addTo(map);
 						});
 					</script>
@@ -204,7 +204,7 @@
                     <h1>Most Retweeted Tweets</h1>
 					<div id="directed-force"></div>
 					<script>
-						d3.json("retweets.json", function(error, links) {
+						d3.json("./json/retweets.json", function(error, links) {
 							var color = d3.scale.category20();
 							var nodes = {};
 							links.forEach(function(link) {
