@@ -1,4 +1,4 @@
-# Visualizating Twitter
+# Visualizing Twitter
 
 This project aims to graphically represent the following information about Twitter given a keyword (or hashtag).
 
