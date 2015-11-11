@@ -2,10 +2,10 @@
 
 This project aims to graphically represent the following information about Twitter given a keyword (or hashtag).
 
-  - Number of tweets posted each day in the past week containing the keywords
+  - Number of tweets posted each day in the past week containing the keyword
   - Popular terms appearing in those tweets
   - Geographical positions of authors of those tweets
-  - The most retweeted tweets containing the keywords
+  - The most retweeted tweets containing the keyword
 
 In this project, Python is used for scraping tweets and outputting processed data in JSON format. The tweets are stored in MongoDB. Data visualization is done by D3.js and Leaflet.js.
 
